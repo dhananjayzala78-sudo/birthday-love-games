@@ -2,188 +2,160 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Quest 💖</title>
+<title>Birthday Love Game</title>
+
 <style>
 body{
-margin:0;
-background:#ffe6f0;
-font-family:Arial;
-text-align:center;
-overflow:hidden;
+  margin:0;
+  background:#fff0f5;
+  font-family:Arial;
+  text-align:center;
 }
+
 canvas{
-background:#fff0f5;
-border:3px solid #ff4d6d;
+  background:#fff;
+  border:3px solid #ff4d6d;
+  margin-top:20px;
 }
+
+#controls{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+#controls button{
+  width:60px;
+  height:60px;
+  font-size:24px;
+  margin:5px;
+  border:none;
+  border-radius:50%;
+  background:#ff4d6d;
+  color:white;
+}
+
 #message{
-position:absolute;
-top:10px;
-width:100%;
-font-size:18px;
-}
-button{
-padding:8px 15px;
-border:none;
-border-radius:20px;
-background:#ff4d6d;
-color:white;
-margin-top:10px;
-cursor:pointer;
+  font-size:18px;
+  margin-top:10px;
 }
 </style>
 </head>
+
 <body>
 
-<div id="message"></div>
-<canvas id="game" width="600" height="600"></canvas>
+<h2>❤️ Birthday Love Game ❤️</h2>
+<div id="message">Collect 3 hearts 💖</div>
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="controls">
+  <button onclick="movePlayer(0,-1)">⬆️</button><br>
+  <button onclick="movePlayer(-1,0)">⬅️</button>
+  <button onclick="movePlayer(1,0)">➡️</button><br>
+  <button onclick="movePlayer(0,1)">⬇️</button>
+</div>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const message = document.getElementById("message");
 
-const tile = 30;
-const rows = 20;
-const cols = 20;
+const tile = 40;
+const rows = 10;
+const cols = 10;
 
-let level = 1;
 let player = {x:1,y:1};
-let trail = [];
 let heartsCollected = 0;
-
-/* ---------- LEVEL 1 ---------- */
+let level = 1;
 
 let hearts = [
-{x:5,y:4},{x:10,y:8},{x:15,y:3}
+  {x:3,y:3},
+  {x:6,y:2},
+  {x:8,y:5}
 ];
-
-function drawLevel1(){
-ctx.clearRect(0,0,600,600);
-ctx.font="28px Arial";
-ctx.fillText("🧍‍♂️",player.x*tile,player.y*tile);
-
-ctx.font="24px Arial";
-hearts.forEach(h=>{
-if(h){
-ctx.fillText("💖",h.x*tile,h.y*tile);
-}
-});
-}
-
-/* ---------- BIG MAZE (20x20) ---------- */
 
 const maze = [
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-[1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-[1,0,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
-[1,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
-[1,0,1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
-[1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,1],
-[1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1],
-[1,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1],
-[1,0,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,1],
-[1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
-[1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
-[1,0,1,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-[1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-[1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-[1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1],
-[1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-[1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+[1,1,1,1,1,1,1,1,1,1],
+[1,0,0,0,0,0,1,0,0,1],
+[1,0,1,1,1,0,1,0,1,1],
+[1,0,1,0,0,0,0,0,0,1],
+[1,0,1,0,1,1,1,1,0,1],
+[1,0,0,0,1,0,0,0,0,1],
+[1,1,1,0,1,0,1,1,0,1],
+[1,0,0,0,0,0,0,1,0,1],
+[1,0,1,1,1,1,0,0,0,1],
+[1,1,1,1,1,1,1,1,1,1]
 ];
 
-let goal = {x:18,y:18};
+function draw(){
+  ctx.clearRect(0,0,400,400);
 
-function drawMaze(){
-ctx.clearRect(0,0,600,600);
+  if(level===1){
+    ctx.fillStyle="pink";
+    hearts.forEach(h=>{
+      ctx.fillText("💖",h.x*tile+10,h.y*tile+30);
+    });
+  }
 
-/* walls */
-for(let y=0;y<rows;y++){
-for(let x=0;x<cols;x++){
-if(maze[y][x]===1){
-ctx.fillStyle="#ffc2d1";
-ctx.fillRect(x*tile,y*tile,tile,tile);
-}
-}
-}
+  if(level===2){
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        if(maze[y][x]===1){
+          ctx.fillStyle="black";
+          ctx.fillRect(x*tile,y*tile,tile,tile);
+        }
+      }
+    }
+  }
 
-/* red trail */
-ctx.fillStyle="rgba(255,0,0,0.4)";
-trail.forEach(p=>{
-ctx.fillRect(p.x*tile,p.y*tile,tile,tile);
-});
-
-/* princess */
-ctx.font="24px Arial";
-ctx.fillText("👸",goal.x*tile,goal.y*tile);
-
-/* player */
-ctx.fillText("🧍‍♂️",player.x*tile,player.y*tile);
+  ctx.fillText("🧑",player.x*tile+10,player.y*tile+30);
 }
 
-/* ---------- MOVEMENT ---------- */
+function movePlayer(dx,dy){
+  let newX = player.x + dx;
+  let newY = player.y + dy;
+
+  if(newX<0 || newY<0 || newX>=cols || newY>=rows) return;
+
+  if(level===1){
+    player.x=newX;
+    player.y=newY;
+
+    hearts = hearts.filter(h=>{
+      if(h.x===player.x && h.y===player.y){
+        heartsCollected++;
+        return false;
+      }
+      return true;
+    });
+
+    if(heartsCollected===3){
+      level=2;
+      player={x:1,y:1};
+      message.innerHTML="Level 2: Reach the end 🏁";
+    }
+  }
+
+  else if(level===2){
+    if(maze[newY][newX]===0){
+      player.x=newX;
+      player.y=newY;
+    }
+  }
+
+  draw();
+}
 
 document.addEventListener("keydown",function(e){
-
-let newX=player.x;
-let newY=player.y;
-
-if(e.key==="ArrowUp") newY--;
-if(e.key==="ArrowDown") newY++;
-if(e.key==="ArrowLeft") newX--;
-if(e.key==="ArrowRight") newX++;
-
-/* Boundary check */
-if(newX<0 || newY<0 || newX>=cols || newY>=rows) return;
-
-if(level===1){
-player.x=newX;
-player.y=newY;
-
-hearts.forEach((h,i)=>{
-if(h && player.x===h.x && player.y===h.y){
-hearts[i]=null;
-heartsCollected++;
-}
+  if(e.key==="ArrowUp" || e.key==="w") movePlayer(0,-1);
+  if(e.key==="ArrowDown" || e.key==="s") movePlayer(0,1);
+  if(e.key==="ArrowLeft" || e.key==="a") movePlayer(-1,0);
+  if(e.key==="ArrowRight" || e.key==="d") movePlayer(1,0);
 });
 
-if(heartsCollected===3){
-level=2;
-player={x:1,y:1};
-message.innerHTML="Ab mere paas love hai 💖<br><button onclick='startMaze()'>Enter The Love Maze</button>";
-}
-drawLevel1();
-}
-
-else if(level===3){
-
-if(maze[newY][newX]===0){
-trail.push({x:player.x,y:player.y});
-player.x=newX;
-player.y=newY;
-}
-
-if(player.x===goal.x && player.y===goal.y){
-message.innerHTML="Distance sirf maze jaisa tha 💌<br>Happy Birthday My Princess 💖";
-}
-
-drawMaze();
-}
-
-});
-
-function startMaze(){
-level=3;
-message.innerHTML="Meri princess ke paas pahunchne me meri madad karo 💕";
-drawMaze();
-}
-
-message.innerHTML="I need love 🥺<br>Please mujhe hearts tak pahunchao 💖";
-drawLevel1();
-
+draw();
 </script>
+
 </body>
 </html>
