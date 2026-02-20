@@ -61,32 +61,45 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const message = document.getElementById("message");
 
-const tile = 40;
-const rows = 10;
-const cols = 10;
+const tile = 20;
+const rows = 20;
+const cols = 20;
 
 let player = {x:1,y:1};
 let heartsCollected = 0;
 let level = 1;
 
 let hearts = [
-  {x:3,y:3},
-  {x:6,y:2},
-  {x:8,y:5}
+  {x:4,y:4},
+  {x:10,y:3},
+  {x:15,y:8}
 ];
 
+// 🔥 Dense Maze
 const maze = [
-[1,1,1,1,1,1,1,1,1,1],
-[1,0,0,0,0,0,1,0,0,1],
-[1,0,1,1,1,0,1,0,1,1],
-[1,0,1,0,0,0,0,0,0,1],
-[1,0,1,0,1,1,1,1,0,1],
-[1,0,0,0,1,0,0,0,0,1],
-[1,1,1,0,1,0,1,1,0,1],
-[1,0,0,0,0,0,0,1,0,1],
-[1,0,1,1,1,1,0,0,0,1],
-[1,1,1,1,1,1,1,1,1,1]
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+[1,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+[1,0,1,1,0,1,1,0,1,0,1,0,1,0,1,1,1,1,0,1],
+[1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,1],
+[1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1],
+[1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,1,0,1],
+[1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1,0,1],
+[1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1],
+[1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+[1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+[1,0,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+[1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1],
+[1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
+[1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,1,0,1],
+[1,0,1,1,1,1,1,0,1,1,1,1,0,1,0,1,0,1,0,1],
+[1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
+[1,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,1],
+[1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1],
+[1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,1,0,1],
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
+
+let queen = {x:18,y:18};
 
 function draw(){
   ctx.clearRect(0,0,400,400);
@@ -94,7 +107,7 @@ function draw(){
   if(level===1){
     ctx.fillStyle="pink";
     hearts.forEach(h=>{
-      ctx.fillText("💖",h.x*tile+10,h.y*tile+30);
+      ctx.fillText("💖",h.x*tile+5,h.y*tile+15);
     });
   }
 
@@ -107,9 +120,10 @@ function draw(){
         }
       }
     }
+    ctx.fillText("👑",queen.x*tile+5,queen.y*tile+15);
   }
 
-  ctx.fillText("🧑",player.x*tile+10,player.y*tile+30);
+  ctx.fillText("🧑",player.x*tile+5,player.y*tile+15);
 }
 
 function movePlayer(dx,dy){
@@ -133,7 +147,7 @@ function movePlayer(dx,dy){
     if(heartsCollected===3){
       level=2;
       player={x:1,y:1};
-      message.innerHTML="Level 2: Reach the end 🏁";
+      message.innerHTML="Reach the Queen 👑";
     }
   }
 
@@ -141,6 +155,11 @@ function movePlayer(dx,dy){
     if(maze[newY][newX]===0){
       player.x=newX;
       player.y=newY;
+    }
+
+    if(player.x===queen.x && player.y===queen.y){
+      message.innerHTML="🎉 Happy Birthday My Queen ❤️";
+      alert("You reached your Queen 👑❤️");
     }
   }
 
