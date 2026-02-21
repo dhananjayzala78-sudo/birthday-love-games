@@ -1,179 +1,237 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Birthday Love Game</title>
+<title>Love Maze - King Edition</title>
 
 <style>
-body{
-  margin:0;
-  background:#fff0f5;
-  font-family:Arial;
-  text-align:center;
+body {
+  margin: 0;
+  background: #140021;
+  overflow: hidden;
+  font-family: Arial;
 }
 
-canvas{
-  background:#fff;
-  border:3px solid #ff4d6d;
-  margin-top:20px;
+canvas {
+  display: block;
+  margin: auto;
+  background: #1b0033;
 }
 
-#controls{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
+#controls {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
 }
 
-#controls button{
-  width:60px;
-  height:60px;
-  font-size:24px;
-  margin:5px;
-  border:none;
-  border-radius:50%;
-  background:#ff4d6d;
-  color:white;
+button {
+  padding: 15px;
+  margin: 10px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: none;
+  background: hotpink;
+  color: white;
 }
 
-#message{
-  font-size:18px;
-  margin-top:10px;
+#loveBtn {
+  background: red;
+}
+
+#popup {
+  position: fixed;
+  top: 40%;
+  width: 100%;
+  text-align: center;
+  display: none;
+}
+
+#popup button {
+  background: deeppink;
+  font-size: 22px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>❤️ Birthday Love Game ❤️</h2>
-<div id="message">Collect 3 hearts 💖</div>
-<canvas id="game" width="400" height="400"></canvas>
+<canvas id="game"></canvas>
 
 <div id="controls">
-  <button onclick="movePlayer(0,-1)">⬆️</button><br>
-  <button onclick="movePlayer(-1,0)">⬅️</button>
-  <button onclick="movePlayer(1,0)">➡️</button><br>
-  <button onclick="movePlayer(0,1)">⬇️</button>
+  <button onclick="move('up')">⬆</button><br>
+  <button onclick="move('left')">⬅</button>
+  <button onclick="move('down')">⬇</button>
+  <button onclick="move('right')">➡</button><br>
+  <button id="loveBtn" onclick="shootLove()">💘 Love Gun</button>
 </div>
+
+<div id="popup">
+  <h1 style="color:white;">I Love You ❤️</h1>
+  <button onclick="goCanva()">Click Here</button>
+</div>
+
+<audio id="bgm" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8f1b1a3c7.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-const message = document.getElementById("message");
 
-const tile = 20;
-const rows = 20;
-const cols = 20;
+canvas.width = 350;
+canvas.height = 350;
 
-let player = {x:1,y:1};
-let heartsCollected = 0;
-let level = 1;
+const tile = 12;
+const size = 30;
 
-let hearts = [
-  {x:4,y:4},
-  {x:10,y:3},
-  {x:15,y:8}
-];
+let maze = [];
+let hearts = [];
+let guards = [];
+let score = 0;
 
-// 🔥 Dense Maze
-const maze = [
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-[1,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
-[1,0,1,1,0,1,1,0,1,0,1,0,1,0,1,1,1,1,0,1],
-[1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,1],
-[1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,1,0,1],
-[1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1,0,1],
-[1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1],
-[1,0,1,1,1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-[1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-[1,0,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
-[1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1],
-[1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
-[1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,1,0,1],
-[1,0,1,1,1,1,1,0,1,1,1,1,0,1,0,1,0,1,0,1],
-[1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
-[1,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,1],
-[1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1],
-[1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,1,0,1],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-];
+let king = {x:0,y:0};
+let queen = {x:29,y:29};
 
-let queen = {x:18,y:18};
-
-function draw(){
-  ctx.clearRect(0,0,400,400);
-
-  if(level===1){
-    ctx.fillStyle="pink";
-    hearts.forEach(h=>{
-      ctx.fillText("💖",h.x*tile+5,h.y*tile+15);
-    });
-  }
-
-  if(level===2){
-    for(let y=0;y<rows;y++){
-      for(let x=0;x<cols;x++){
-        if(maze[y][x]===1){
-          ctx.fillStyle="black";
-          ctx.fillRect(x*tile,y*tile,tile,tile);
-        }
-      }
+function generateMaze(){
+  for(let i=0;i<size;i++){
+    maze[i]=[];
+    for(let j=0;j<size;j++){
+      maze[i][j] = Math.random() < 0.35 ? 1 : 0;
     }
-    ctx.fillText("👑",queen.x*tile+5,queen.y*tile+15);
   }
-
-  ctx.fillText("🧑",player.x*tile+5,player.y*tile+15);
+  maze[0][0]=0;
+  maze[29][29]=0;
 }
 
-function movePlayer(dx,dy){
-  let newX = player.x + dx;
-  let newY = player.y + dy;
-
-  if(newX<0 || newY<0 || newX>=cols || newY>=rows) return;
-
-  if(level===1){
-    player.x=newX;
-    player.y=newY;
-
-    hearts = hearts.filter(h=>{
-      if(h.x===player.x && h.y===player.y){
-        heartsCollected++;
-        return false;
-      }
-      return true;
+function generateHearts(){
+  for(let i=0;i<15;i++){
+    hearts.push({
+      x:Math.floor(Math.random()*size),
+      y:Math.floor(Math.random()*size)
     });
+  }
+}
 
-    if(heartsCollected===3){
-      level=2;
-      player={x:1,y:1};
-      message.innerHTML="Reach the Queen 👑";
+function generateGuards(){
+  for(let i=0;i<5;i++){
+    guards.push({
+      x:Math.floor(Math.random()*size),
+      y:Math.floor(Math.random()*size),
+      frozen:false
+    });
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let i=0;i<size;i++){
+    for(let j=0;j<size;j++){
+      if(maze[i][j]==1){
+        ctx.fillStyle="pink";
+        ctx.fillRect(j*tile,i*tile,tile,tile);
+      }
     }
   }
 
-  else if(level===2){
-    if(maze[newY][newX]===0){
-      player.x=newX;
-      player.y=newY;
-    }
+  hearts.forEach(h=>{
+    ctx.fillStyle="red";
+    ctx.beginPath();
+    ctx.arc(h.x*tile+6,h.y*tile+6,4,0,Math.PI*2);
+    ctx.fill();
+  });
 
-    if(player.x===queen.x && player.y===queen.y){
-      message.innerHTML="🎉 Happy Birthday My Queen ❤️";
-      alert("You reached your Queen 👑❤️");
-    }
+  guards.forEach(g=>{
+    ctx.fillStyle=g.frozen?"blue":"red";
+    ctx.fillRect(g.x*tile,g.y*tile,tile,tile);
+  });
+
+  ctx.fillStyle="gold";
+  ctx.fillRect(king.x*tile,king.y*tile,tile,tile);
+
+  ctx.fillStyle="white";
+  ctx.fillRect(queen.x*tile,queen.y*tile,tile,tile);
+}
+
+function move(dir){
+  let nx=king.x;
+  let ny=king.y;
+
+  if(dir=="up") nx--;
+  if(dir=="down") nx++;
+  if(dir=="left") ny--;
+  if(dir=="right") ny++;
+
+  if(nx>=0 && ny>=0 && nx<size && ny<size && maze[nx][ny]==0){
+    king.x=nx;
+    king.y=ny;
   }
 
+  checkHeart();
+  checkQueen();
   draw();
 }
 
-document.addEventListener("keydown",function(e){
-  if(e.key==="ArrowUp" || e.key==="w") movePlayer(0,-1);
-  if(e.key==="ArrowDown" || e.key==="s") movePlayer(0,1);
-  if(e.key==="ArrowLeft" || e.key==="a") movePlayer(-1,0);
-  if(e.key==="ArrowRight" || e.key==="d") movePlayer(1,0);
-});
+function checkHeart(){
+  hearts = hearts.filter(h=>{
+    if(h.x==king.y && h.y==king.x){
+      score++;
+      return false;
+    }
+    return true;
+  });
+}
 
+function checkQueen(){
+  if(king.x==queen.y && king.y==queen.x){
+    document.getElementById("popup").style.display="block";
+    fireworks();
+  }
+}
+
+function shootLove(){
+  guards.forEach(g=>{
+    if(Math.abs(g.x-king.x)<=1 && Math.abs(g.y-king.y)<=1){
+      g.frozen=true;
+    }
+  });
+}
+
+function moveGuards(){
+  guards.forEach(g=>{
+    if(!g.frozen){
+      let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      let d=dirs[Math.floor(Math.random()*4)];
+      let nx=g.x+d[0];
+      let ny=g.y+d[1];
+      if(nx>=0 && ny>=0 && nx<size && ny<size && maze[nx][ny]==0){
+        g.x=nx;
+        g.y=ny;
+      }
+    }
+  });
+  draw();
+}
+
+function fireworks(){
+  for(let i=0;i<50;i++){
+    ctx.fillStyle="yellow";
+    ctx.fillRect(Math.random()*350,Math.random()*350,3,3);
+  }
+}
+
+function goCanva(){
+  window.location.href="https://jaan-special.my.canva.site/";
+}
+
+generateMaze();
+generateHearts();
+generateGuards();
 draw();
+setInterval(moveGuards,500);
+document.getElementById("bgm").play();
 </script>
 
 </body>
