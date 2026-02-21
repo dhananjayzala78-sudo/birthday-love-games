@@ -2,220 +2,182 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Maze King</title>
-
+<title>Love Maze Ultimate</title>
 <style>
-body{
-  margin:0;
-  background:#140021;
-  overflow:hidden;
+body{margin:0;background:#111;overflow:hidden;}
+canvas{display:block;margin:auto;background:#ff69b4;}
+#joystick{
+ position:fixed;
+ bottom:30px;
+ left:30px;
+ width:120px;
+ height:120px;
+ background:rgba(255,255,255,0.15);
+ border-radius:50%;
+ touch-action:none;
 }
-
-canvas{
-  display:block;
-  margin:auto;
-  background:#1b0033;
+#stick{
+ width:50px;
+ height:50px;
+ background:white;
+ border-radius:50%;
+ position:absolute;
+ left:35px;
+ top:35px;
 }
-
-#controls{
-  position:fixed;
-  bottom:20px;
-  width:100%;
-  text-align:center;
-}
-
-button{
-  padding:15px;
-  margin:8px;
-  font-size:20px;
-  border-radius:12px;
-  border:none;
-  background:hotpink;
-  color:white;
-}
-
 #loveBtn{
-  background:red;
-}
-
-#popup{
-  position:fixed;
-  top:40%;
-  width:100%;
-  text-align:center;
-  display:none;
-}
-
-#popup button{
-  font-size:22px;
-  background:deeppink;
+ position:fixed;
+ bottom:50px;
+ right:40px;
+ padding:20px;
+ font-size:22px;
+ background:red;
+ color:white;
+ border:none;
+ border-radius:50%;
 }
 </style>
 </head>
-
 <body>
 
-<canvas id="game" width="360" height="360"></canvas>
+<canvas id="game" width="420" height="420"></canvas>
 
-<div id="controls">
-  <button ontouchstart="move('up')">⬆</button><br>
-  <button ontouchstart="move('left')">⬅</button>
-  <button ontouchstart="move('down')">⬇</button>
-  <button ontouchstart="move('right')">➡</button><br>
-  <button id="loveBtn" ontouchstart="shootLove()">💘</button>
-</div>
-
-<div id="popup">
-  <h1 style="color:white;">I Love You ❤️</h1>
-  <button onclick="goCanva()">Go To Surprise</button>
-</div>
+<div id="joystick"><div id="stick"></div></div>
+<button id="loveBtn">💘</button>
 
 <script>
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-const tile=12;
-const size=30;
+const size=21;
+const tile=20;
 
 let maze=[];
-let hearts=[];
-let guards=[];
-let king={x:0,y:0};
-let queen={x:29,y:29};
+let king={x:1,y:1};
+let queen={x:size-2,y:size-2};
+let monsters=[];
 
 let kingImg=new Image();
-kingImg.src="king.png";
-
 let queenImg=new Image();
+kingImg.src="king.png";
 queenImg.src="queen.png";
 
 function generateMaze(){
-  for(let i=0;i<size;i++){
-    maze[i]=[];
-    for(let j=0;j<size;j++){
-      maze[i][j]=(Math.random()<0.3)?1:0;
-    }
+ for(let i=0;i<size;i++){
+  maze[i]=[];
+  for(let j=0;j<size;j++) maze[i][j]=1;
+ }
+ function carve(x,y){
+  let dirs=[[2,0],[-2,0],[0,2],[0,-2]];
+  dirs.sort(()=>Math.random()-0.5);
+  for(let d of dirs){
+   let nx=x+d[0], ny=y+d[1];
+   if(nx>0&&ny>0&&nx<size-1&&ny<size-1&&maze[nx][ny]==1){
+    maze[nx][ny]=0;
+    maze[x+d[0]/2][y+d[1]/2]=0;
+    carve(nx,ny);
+   }
   }
-  maze[0][0]=0;
-  maze[29][29]=0;
+ }
+ maze[1][1]=0;
+ carve(1,1);
 }
 
-function generateHearts(){
-  for(let i=0;i<12;i++){
-    hearts.push({
-      x:Math.floor(Math.random()*size),
-      y:Math.floor(Math.random()*size)
-    });
-  }
-}
-
-function generateGuards(){
-  for(let i=0;i<4;i++){
-    guards.push({
-      x:Math.floor(Math.random()*size),
-      y:Math.floor(Math.random()*size),
-      frozen:false
-    });
-  }
+function spawnMonsters(){
+ monsters=[
+  {x:5,y:5,type:"🥷",frozen:false},
+  {x:9,y:9,type:"🧙",frozen:false},
+  {x:13,y:13,type:"🧛",frozen:false}
+ ];
 }
 
 function draw(){
-  ctx.clearRect(0,0,360,360);
-
-  for(let i=0;i<size;i++){
-    for(let j=0;j<size;j++){
-      if(maze[i][j]==1){
-        ctx.fillStyle="pink";
-        ctx.fillRect(j*tile,i*tile,tile,tile);
-      }
-    }
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ for(let i=0;i<size;i++){
+  for(let j=0;j<size;j++){
+   ctx.fillStyle = maze[i][j]==1 ? "black" : "#ff69b4";
+   ctx.fillRect(j*tile,i*tile,tile,tile);
   }
-
-  hearts.forEach(h=>{
-    ctx.fillStyle="red";
-    ctx.beginPath();
-    ctx.arc(h.x*tile+6,h.y*tile+6,4,0,Math.PI*2);
-    ctx.fill();
-  });
-
-  guards.forEach(g=>{
-    ctx.fillStyle=g.frozen?"blue":"red";
-    ctx.fillRect(g.y*tile,g.x*tile,tile,tile);
-  });
-
-  ctx.drawImage(kingImg,king.y*tile,king.x*tile,tile,tile);
-  ctx.drawImage(queenImg,queen.y*tile,queen.x*tile,tile,tile);
+ }
+ monsters.forEach(m=>{
+  ctx.font="18px Arial";
+  ctx.fillText(m.type,m.y*tile+2,m.x*tile+18);
+ });
+ ctx.drawImage(kingImg,king.y*tile,king.x*tile,tile,tile);
+ ctx.drawImage(queenImg,queen.y*tile,queen.x*tile,tile,tile);
 }
 
-function move(dir){
-  let nx=king.x;
-  let ny=king.y;
-
-  if(dir=="up") nx--;
-  if(dir=="down") nx++;
-  if(dir=="left") ny--;
-  if(dir=="right") ny++;
-
-  if(nx>=0 && ny>=0 && nx<size && ny<size && maze[nx][ny]==0){
-    king.x=nx;
-    king.y=ny;
-  }
-
-  checkHeart();
-  checkQueen();
-  draw();
-}
-
-function checkHeart(){
-  hearts=hearts.filter(h=>{
-    if(h.x==king.y && h.y==king.x){
-      return false;
-    }
-    return true;
-  });
-}
-
-function checkQueen(){
-  if(king.x==queen.y && king.y==queen.x){
-    document.getElementById("popup").style.display="block";
-  }
-}
-
-function shootLove(){
-  guards.forEach(g=>{
-    if(Math.abs(g.x-king.x)<=1 && Math.abs(g.y-king.y)<=1){
-      g.frozen=true;
-      setTimeout(()=>{g.frozen=false;},2000);
-    }
-  });
-}
-
-function moveGuards(){
-  guards.forEach(g=>{
-    if(!g.frozen){
-      let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      let d=dirs[Math.floor(Math.random()*4)];
-      let nx=g.x+d[0];
-      let ny=g.y+d[1];
-      if(nx>=0 && ny>=0 && nx<size && ny<size && maze[nx][ny]==0){
-        g.x=nx;
-        g.y=ny;
-      }
-    }
-  });
-  draw();
-}
-
-function goCanva(){
+function move(dx,dy){
+ let nx=king.x+dx;
+ let ny=king.y+dy;
+ if(maze[nx][ny]==0){
+  king.x=nx;
+  king.y=ny;
+ }
+ if(king.x==queen.x && king.y==queen.y){
+  alert("I Love You ❤️");
   window.location.href="https://jaan-special.my.canva.site/";
+ }
+ draw();
 }
 
-generateMaze();
-generateHearts();
-generateGuards();
-setInterval(moveGuards,600);
-draw();
-</script>
+function moveMonsters(){
+ monsters.forEach(m=>{
+  if(!m.frozen){
+   let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+   let d=dirs[Math.floor(Math.random()*4)];
+   let nx=m.x+d[0], ny=m.y+d[1];
+   if(maze[nx][ny]==0){m.x=nx;m.y=ny;}
+  }
+ });
+ draw();
+}
 
+document.getElementById("loveBtn").ontouchstart=()=>{
+ monsters.forEach(m=>{
+  if(Math.abs(m.x-king.x)<=1 && Math.abs(m.y-king.y)<=1){
+   m.frozen=true;
+   setTimeout(()=>m.frozen=false,2000);
+  }
+ });
+};
+
+let joystick=document.getElementById("joystick");
+let stick=document.getElementById("stick");
+
+joystick.addEventListener("touchmove",(e)=>{
+ let rect=joystick.getBoundingClientRect();
+ let touch=e.touches[0];
+ let x=touch.clientX-rect.left-60;
+ let y=touch.clientY-rect.top-60;
+ let dist=Math.sqrt(x*x+y*y);
+ if(dist>40){
+  x=x/dist*40;
+  y=y/dist*40;
+ }
+ stick.style.left=(60+x-25)+"px";
+ stick.style.top=(60+y-25)+"px";
+
+ if(Math.abs(x)>Math.abs(y)){
+  move(0,x>0?1:-1);
+ }else{
+  move(y>0?1:-1,0);
+ }
+});
+
+joystick.addEventListener("touchend",()=>{
+ stick.style.left="35px";
+ stick.style.top="35px";
+});
+
+kingImg.onload=()=>{
+ queenImg.onload=()=>{
+  generateMaze();
+  spawnMonsters();
+  setInterval(moveMonsters,700);
+  draw();
+ }
+}
+</script>
 </body>
 </html>
