@@ -1,104 +1,99 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Maze - King Edition</title>
+<title>Love Maze King</title>
 
 <style>
-body {
-  margin: 0;
-  background: #140021;
-  overflow: hidden;
-  font-family: Arial;
+body{
+  margin:0;
+  background:#140021;
+  overflow:hidden;
 }
 
-canvas {
-  display: block;
-  margin: auto;
-  background: #1b0033;
+canvas{
+  display:block;
+  margin:auto;
+  background:#1b0033;
 }
 
-#controls {
-  position: fixed;
-  bottom: 20px;
-  width: 100%;
-  text-align: center;
+#controls{
+  position:fixed;
+  bottom:20px;
+  width:100%;
+  text-align:center;
 }
 
-button {
-  padding: 15px;
-  margin: 10px;
-  font-size: 18px;
-  border-radius: 10px;
-  border: none;
-  background: hotpink;
-  color: white;
+button{
+  padding:15px;
+  margin:8px;
+  font-size:20px;
+  border-radius:12px;
+  border:none;
+  background:hotpink;
+  color:white;
 }
 
-#loveBtn {
-  background: red;
+#loveBtn{
+  background:red;
 }
 
-#popup {
-  position: fixed;
-  top: 40%;
-  width: 100%;
-  text-align: center;
-  display: none;
+#popup{
+  position:fixed;
+  top:40%;
+  width:100%;
+  text-align:center;
+  display:none;
 }
 
-#popup button {
-  background: deeppink;
-  font-size: 22px;
+#popup button{
+  font-size:22px;
+  background:deeppink;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="game"></canvas>
+<canvas id="game" width="360" height="360"></canvas>
 
 <div id="controls">
-  <button onclick="move('up')">⬆</button><br>
-  <button onclick="move('left')">⬅</button>
-  <button onclick="move('down')">⬇</button>
-  <button onclick="move('right')">➡</button><br>
-  <button id="loveBtn" onclick="shootLove()">💘 Love Gun</button>
+  <button ontouchstart="move('up')">⬆</button><br>
+  <button ontouchstart="move('left')">⬅</button>
+  <button ontouchstart="move('down')">⬇</button>
+  <button ontouchstart="move('right')">➡</button><br>
+  <button id="loveBtn" ontouchstart="shootLove()">💘</button>
 </div>
 
 <div id="popup">
   <h1 style="color:white;">I Love You ❤️</h1>
-  <button onclick="goCanva()">Click Here</button>
+  <button onclick="goCanva()">Go To Surprise</button>
 </div>
 
-<audio id="bgm" loop>
-  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8f1b1a3c7.mp3" type="audio/mpeg">
-</audio>
-
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-canvas.width = 350;
-canvas.height = 350;
+const tile=12;
+const size=30;
 
-const tile = 12;
-const size = 30;
+let maze=[];
+let hearts=[];
+let guards=[];
+let king={x:0,y:0};
+let queen={x:29,y:29};
 
-let maze = [];
-let hearts = [];
-let guards = [];
-let score = 0;
+let kingImg=new Image();
+kingImg.src="king.png";
 
-let king = {x:0,y:0};
-let queen = {x:29,y:29};
+let queenImg=new Image();
+queenImg.src="queen.png";
 
 function generateMaze(){
   for(let i=0;i<size;i++){
     maze[i]=[];
     for(let j=0;j<size;j++){
-      maze[i][j] = Math.random() < 0.35 ? 1 : 0;
+      maze[i][j]=(Math.random()<0.3)?1:0;
     }
   }
   maze[0][0]=0;
@@ -106,7 +101,7 @@ function generateMaze(){
 }
 
 function generateHearts(){
-  for(let i=0;i<15;i++){
+  for(let i=0;i<12;i++){
     hearts.push({
       x:Math.floor(Math.random()*size),
       y:Math.floor(Math.random()*size)
@@ -115,7 +110,7 @@ function generateHearts(){
 }
 
 function generateGuards(){
-  for(let i=0;i<5;i++){
+  for(let i=0;i<4;i++){
     guards.push({
       x:Math.floor(Math.random()*size),
       y:Math.floor(Math.random()*size),
@@ -125,7 +120,7 @@ function generateGuards(){
 }
 
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,360,360);
 
   for(let i=0;i<size;i++){
     for(let j=0;j<size;j++){
@@ -145,14 +140,11 @@ function draw(){
 
   guards.forEach(g=>{
     ctx.fillStyle=g.frozen?"blue":"red";
-    ctx.fillRect(g.x*tile,g.y*tile,tile,tile);
+    ctx.fillRect(g.y*tile,g.x*tile,tile,tile);
   });
 
-  ctx.fillStyle="gold";
-  ctx.fillRect(king.x*tile,king.y*tile,tile,tile);
-
-  ctx.fillStyle="white";
-  ctx.fillRect(queen.x*tile,queen.y*tile,tile,tile);
+  ctx.drawImage(kingImg,king.y*tile,king.x*tile,tile,tile);
+  ctx.drawImage(queenImg,queen.y*tile,queen.x*tile,tile,tile);
 }
 
 function move(dir){
@@ -175,9 +167,8 @@ function move(dir){
 }
 
 function checkHeart(){
-  hearts = hearts.filter(h=>{
+  hearts=hearts.filter(h=>{
     if(h.x==king.y && h.y==king.x){
-      score++;
       return false;
     }
     return true;
@@ -187,7 +178,6 @@ function checkHeart(){
 function checkQueen(){
   if(king.x==queen.y && king.y==queen.x){
     document.getElementById("popup").style.display="block";
-    fireworks();
   }
 }
 
@@ -195,6 +185,7 @@ function shootLove(){
   guards.forEach(g=>{
     if(Math.abs(g.x-king.x)<=1 && Math.abs(g.y-king.y)<=1){
       g.frozen=true;
+      setTimeout(()=>{g.frozen=false;},2000);
     }
   });
 }
@@ -215,13 +206,6 @@ function moveGuards(){
   draw();
 }
 
-function fireworks(){
-  for(let i=0;i<50;i++){
-    ctx.fillStyle="yellow";
-    ctx.fillRect(Math.random()*350,Math.random()*350,3,3);
-  }
-}
-
 function goCanva(){
   window.location.href="https://jaan-special.my.canva.site/";
 }
@@ -229,9 +213,8 @@ function goCanva(){
 generateMaze();
 generateHearts();
 generateGuards();
+setInterval(moveGuards,600);
 draw();
-setInterval(moveGuards,500);
-document.getElementById("bgm").play();
 </script>
 
 </body>
